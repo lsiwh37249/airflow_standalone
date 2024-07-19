@@ -1,0 +1,8 @@
+logs/
+*.pid
+__pycache__
+airflow.db
+*.swp
+*.b
+".gitignore"
+standalone_admin_password.txt
