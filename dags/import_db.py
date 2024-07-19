@@ -48,9 +48,9 @@ with DAG(
     task_to_tmp = BashOperator(
         task_id="to.tmp",
         bash_command="""
-            sudo cp ~/data/csv/{{ds_nodash}}/csv.csv /var/lib/mysql-files
-        """
-    )
+            echo "tmp"
+            """
+        )
 
     task_to_base = BashOperator(
         task_id="to.base",
