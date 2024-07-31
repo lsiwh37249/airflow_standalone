@@ -69,7 +69,7 @@ with DAG(
         if os.path.exists(path):
             return "rm.dir"
         else:
-            return "get.data","echo.task"
+            return "get.start","echo.task"
 
     branch_op = BranchPythonOperator(
         task_id="branch.op",
@@ -100,7 +100,7 @@ with DAG(
         requirements=["git+https://github.com/lsiwh37249/mov.git@0.3/api"],
         venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
     )
-
+    
     rm_dir = BashOperator(
         task_id='rm.dir',
         bash_command="""
@@ -112,7 +112,7 @@ with DAG(
     echo_task = BashOperator(
         task_id='echo.task',
         bash_command="echo 'task'",
-        trigger_rule="all_success"
+        trigger_rule="all_done"
     )
 
 
@@ -127,26 +127,34 @@ with DAG(
     
     task_end = EmptyOperator(task_id='end', trigger_rule="all_done")
     task_start = EmptyOperator(task_id='start')
+    get_start = EmptyOperator(task_id="get.start",trigger_rule="all_done")
+    get_end = EmptyOperator(task_id="get.end",trigger_rule="all_done" )
     multi_y = EmptyOperator(task_id='multi.y') # 다양성 영화 유무
     multi_n = EmptyOperator(task_id='multi.n')
     nation_k = EmptyOperator(task_id='nation_k') # 한국외국영화
     nation_f = EmptyOperator(task_id='nation_f')
-    join_task = BashOperator(
-            task_id='join',
+    throw_err = BashOperator(
+            task_id='throw.err',
             bash_command="exit 1",
             trigger_rule="all_done"
             )
 
 
-    task_start >> branch_op
-    task_start >> join_task >> save_data
+    #task_start >> branch_op
+    #task_start >> throw_err >> save_data
    
-    branch_op >> rm_dir >> [task_get, multi_y, multi_n, nation_k, nation_f]
-    branch_op >> echo_task >> save_data
-    branch_op >> [task_get, multi_y, multi_n, nation_k, nation_f]
+    #branch_op >> rm_dir >> [task_get, multi_y, multi_n, nation_k, nation_f]
+    #branch_op >> echo_task >> save_data
+    #branch_op >> [task_get, multi_y, multi_n, nation_k, nation_f]
 
-    [task_get, multi_y, multi_n, nation_k, nation_f] >> save_data
-    save_data >> task_end
+    #[task_get, multi_y, multi_n, nation_k, nation_f] >> save_data
+    #save_data >> task_end
     
-    #task_get >> save_data >> task_end
-    
+    task_start >> branch_op
+    branch_op >> rm_dir >> get_start
+    branch_op >> echo_task >> get_start
+    branch_op >> get_start
+    task_start >> throw_err >> get_start
+
+    get_start >> [task_get, multi_y, multi_n, nation_k, nation_f] >> get_end
+    get_end >> save_data >> task_end
