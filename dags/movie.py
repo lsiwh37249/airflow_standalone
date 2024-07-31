@@ -35,6 +35,8 @@ with DAG(
         'retries': 1,
         'retry_delay': timedelta(seconds=3)
         },
+    max_active_tasks=3,
+    max_active_runs=1,
     description='hello world DAG',
     #schedule=timedelta(days=1),
     schedule="10 4 * * *",
@@ -58,14 +60,7 @@ with DAG(
         df = save2df(ds_nodash)
         print(df.head(5))
 
-    def get_data(ds_nodash):
-        from mov.api.call import get_key
-        key = get_key()
-        print("*" * 33)
-        print(key)
-        
-        print("*" * 33)
-    
+   
     def branch_fun(**kwargs):
         ld = kwargs['ds_nodash']
         import os
@@ -132,6 +127,10 @@ with DAG(
     
     task_end = EmptyOperator(task_id='end', trigger_rule="all_done")
     task_start = EmptyOperator(task_id='start')
+    multi_y = EmptyOperator(task_id='multi.y') # 다양성 영화 유무
+    multi_n = EmptyOperator(task_id='multi.n')
+    nation_k = EmptyOperator(task_id='nation_k') # 한국외국영화
+    nation_f = EmptyOperator(task_id='nation_f')
     join_task = BashOperator(
             task_id='join',
             bash_command="exit 1",
@@ -140,8 +139,14 @@ with DAG(
 
 
     task_start >> branch_op
-    task_start >> join_task >> save_data >> task_end
-    branch_op >> rm_dir >> task_get
-    branch_op >> echo_task
-    task_get >> save_data >> task_end
+    task_start >> join_task >> save_data
+   
+    branch_op >> rm_dir >> [task_get, multi_y, multi_n, nation_k, nation_f]
+    branch_op >> echo_task >> save_data
+    branch_op >> [task_get, multi_y, multi_n, nation_k, nation_f]
+
+    [task_get, multi_y, multi_n, nation_k, nation_f] >> save_data
+    save_data >> task_end
+    
+    #task_get >> save_data >> task_end
     
