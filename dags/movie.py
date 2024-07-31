@@ -60,6 +60,33 @@ with DAG(
         df = save2df(ds_nodash)
         print(df.head(5))
 
+#    def fun_multi():
+#        from mov.api.call import save2df
+
+    
+    def fun_multi_y(ds_nodash):
+        from mov.api.call import save2df
+        p = {"multiMovieYn" : "Y"}
+        df = save2df(load_dt=ds_nodash, url_param=p)
+        print(df.head(5))
+
+    def fun_multi_n(ds_nodash):
+        from mov.api.call import save2df
+        p = {"multiMovieYn" : "N"}
+        df = save2df(load_dt=ds_nodash, url_param=p)
+        print(df.head(5))
+
+    def fun_nation_k(ds_nodash):
+        from mov.api.call import save2df
+        p = {"repNationCd" : "K"}
+        df = save2df(load_dt=ds_nodash, url_param=p)
+        print(df.head(5))
+
+    def fun_nation_f(ds_nodash):
+        from mov.api.call import save2df
+        p = {"repNationCd" : "F"}
+        df = save2df(load_dt=ds_nodash, url_param=p)
+        print(df.head(5))
    
     def branch_fun(**kwargs):
         ld = kwargs['ds_nodash']
@@ -85,7 +112,7 @@ with DAG(
     task_get = PythonVirtualenvOperator(
         task_id='get.data',
         python_callable=get_data,
-        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3/api"],
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
         system_site_packages=False,
         trigger_rule="all_done",
         venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
@@ -97,9 +124,41 @@ with DAG(
         python_callable=save_data,
         system_site_packages=False,
         trigger_rule="one_success",
-        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3/api"],
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
         venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
     )
+
+    #다양성 영화 유무
+    multi_y = PythonVirtualenvOperator(
+        task_id='multi.y',
+        #task_id='multi',
+        python_callable=fun_multi_y,
+        #python_callable=fun_multi,
+        #op_args= {"multiMovieYn" : "Y"},
+        system_site_packages=False,
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        )
+
+    multi_n = PythonVirtualenvOperator(
+        task_id='multi.n',
+        python_callable=fun_multi_n,
+        system_site_packages=False,
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        )
+
+    nation_k = PythonVirtualenvOperator(
+        task_id='nation.k',
+        python_callable=fun_nation_k,
+        system_site_packages=False,
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        )
+
+    nation_f = PythonVirtualenvOperator(
+        task_id='nation.f',
+        python_callable=fun_nation_f,
+        system_site_packages=False,
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        )
     
     rm_dir = BashOperator(
         task_id='rm.dir',
@@ -129,10 +188,9 @@ with DAG(
     task_start = EmptyOperator(task_id='start')
     get_start = EmptyOperator(task_id="get.start",trigger_rule="all_done")
     get_end = EmptyOperator(task_id="get.end",trigger_rule="all_done" )
-    multi_y = EmptyOperator(task_id='multi.y') # 다양성 영화 유무
-    multi_n = EmptyOperator(task_id='multi.n')
-    nation_k = EmptyOperator(task_id='nation_k') # 한국외국영화
-    nation_f = EmptyOperator(task_id='nation_f')
+    #multi_n = EmptyOperator(task_id='multi.n')
+    #nation_k = EmptyOperator(task_id='nation_k') # 한국외국영화
+    #nation_f = EmptyOperator(task_id='nation_f')
     throw_err = BashOperator(
             task_id='throw.err',
             bash_command="exit 1",
