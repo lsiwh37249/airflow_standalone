@@ -46,6 +46,23 @@ with DAG(
 ) as dag:
 
 
+    def common_get_data(ds_nodash, url_param):
+    #def common_get_data(ds_nodash, {"MOVIE_4_KEY": "F"}):
+        from mov.api.call import save2df
+        df = save2df(load_dt=ds_nodash, url_param=url_param)
+
+        print(df[['movieCd', 'movieNm']].head(5))
+
+        for k, v in url_param.items():
+            df[k] = v
+
+        #p_cols = list(url_param.keys()).insert(0, 'load_dt')
+        p_cols = ['load_dt'] + list(url_param.keys())
+        df.to_parquet('~/tmp/test_parquet',
+                partition_cols=p_cols
+                # partition_cols=['load_dt', 'movieKey']
+        )
+
     def save_data(ds_nodash):
         from mov.api.call import get_key,echo
         key = get_key()
@@ -60,33 +77,13 @@ with DAG(
         df = save2df(ds_nodash)
         print(df.head(5))
 
-#    def fun_multi():
-#        from mov.api.call import save2df
-
-    
-    def fun_multi_y(ds_nodash):
+    def fun_multi(**kwargs):
+        # 키에 해당하는 값을 가지고 오기
+        #print(kwargs.get("arg1"))
+        #print(kwargs.get("ds_nodash"))
         from mov.api.call import save2df
-        p = {"multiMovieYn" : "Y"}
-        df = save2df(load_dt=ds_nodash, url_param=p)
-        print(df.head(5))
-
-    def fun_multi_n(ds_nodash):
-        from mov.api.call import save2df
-        p = {"multiMovieYn" : "N"}
-        df = save2df(load_dt=ds_nodash, url_param=p)
-        print(df.head(5))
-
-    def fun_nation_k(ds_nodash):
-        from mov.api.call import save2df
-        p = {"repNationCd" : "K"}
-        df = save2df(load_dt=ds_nodash, url_param=p)
-        print(df.head(5))
-
-    def fun_nation_f(ds_nodash):
-        from mov.api.call import save2df
-        p = {"repNationCd" : "F"}
-        df = save2df(load_dt=ds_nodash, url_param=p)
-        print(df.head(5))
+        #print(kwargs)
+        df = save2df(load_dt=kwargs.get("ds_nodash"), url_param=kwargs.get("arg1"))
    
     def branch_fun(**kwargs):
         ld = kwargs['ds_nodash']
@@ -112,7 +109,7 @@ with DAG(
     task_get = PythonVirtualenvOperator(
         task_id='get.data',
         python_callable=get_data,
-        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
         system_site_packages=False,
         trigger_rule="all_done",
         venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
@@ -124,7 +121,7 @@ with DAG(
         python_callable=save_data,
         system_site_packages=False,
         trigger_rule="one_success",
-        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
         venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
     )
 
@@ -132,32 +129,35 @@ with DAG(
     multi_y = PythonVirtualenvOperator(
         task_id='multi.y',
         #task_id='multi',
-        python_callable=fun_multi_y,
-        #python_callable=fun_multi,
-        #op_args= {"multiMovieYn" : "Y"},
+        python_callable=common_get_data,
         system_site_packages=False,
-        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+        #op_args=["{{ds_nodash}}"],
+        op_kwargs={'url_param':{"multiMovieYn" : "Y"}}
         )
 
     multi_n = PythonVirtualenvOperator(
         task_id='multi.n',
-        python_callable=fun_multi_n,
+        python_callable=common_get_data,
         system_site_packages=False,
         requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        op_kwargs={'url_param' :{"multiMovieYn" : "N"}}
         )
-
+    
     nation_k = PythonVirtualenvOperator(
         task_id='nation.k',
-        python_callable=fun_nation_k,
+        python_callable=common_get_data,
         system_site_packages=False,
         requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        op_kwargs={'url_param' : {"repNationCd" : "K"}}
         )
 
     nation_f = PythonVirtualenvOperator(
         task_id='nation.f',
-        python_callable=fun_nation_f,
+        python_callable=common_get_data,
         system_site_packages=False,
         requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.1/api"],
+        op_kwargs={'url_param' : {"repNationCd" : "F"}}
         )
     
     rm_dir = BashOperator(
@@ -213,6 +213,6 @@ with DAG(
     branch_op >> echo_task >> get_start
     branch_op >> get_start
     task_start >> throw_err >> get_start
-
+ #   get_start >> [task_get, multi_y] >> get_end
     get_start >> [task_get, multi_y, multi_n, nation_k, nation_f] >> get_end
     get_end >> save_data >> task_end
