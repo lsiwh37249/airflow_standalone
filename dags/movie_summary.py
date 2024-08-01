@@ -39,17 +39,6 @@ with DAG(
         "git+https://github.com/lsiwh37249/mov_agg.git@0.5/agg"
                 ]
 
-    #def get_apply_data(ds_nodash, url_param):
-   # def pro_data(ds_nodash, **params):
-       # print(params['url_param'])
-        #print(f"{params}")
-       # print(f"{params['url_param']}")
-       # print("pro data")
-
-#    def gen_empty(id):
-#        task = []
-#        my = EmptyOperator()
-#   def vpython(id, fun_obj, op_kwargs):
     def vpython(**kw):
         task  = PythonVirtualenvOperator(
             task_id=kw['id'],
@@ -67,9 +56,9 @@ with DAG(
     def pro_data2(task_name ,**params):
          print("@" * 33)
          print(task_name)
-         from pprint import pprint as pp
+         #from pprint import pprint as pp
          ##print(params)
-         pp(params)
+         #pp(params)
          print("@" * 33)         
 
     def pro_data3(task_name):
@@ -81,7 +70,10 @@ with DAG(
         load_dt = params['ds_nodash']
         from mov_agg.u import merge
         df = merge(load_dt)
+        
         print("*" * 33)
+
+        df.loc[df['multiMovieYn_n'] == 'N', 'multiMovieYn_m'] = 'N'
         print(df)
    
 
@@ -90,14 +82,14 @@ with DAG(
 #    for my_task,task in zip(my_tasks,vpython("apply.Atype","apply.Btype","apply.Ctype","apply.Dtype")):
 #        my_task = task
 #    apply_Atype = vpython("apply.type", pro_data, {"url_param" : {"multiMovieYn": "y"}})     
-    apply_Atype = vpython(id ="apply.type", fun_obj = pro_data, op_kwargs = {"task_name" : "apply_type!!!"})     
+    apply_Atype = vpython(id ="apply.type", fun_obj = pro_data2, op_kwargs = {"task_name" : "apply_type!!!"})     
 #    apply_Btype = vpython({'task_ID' : 'apply.Btype'})
 #    apply_Ctype = vpython('apply.Ctype')
 #    apply_Dtype = vpython('apply.Dtype')
 
-    merge_df = vpython(id ="merge.df", fun_obj = pro_data, op_kwargs = {"task_name": "merge_df!!!"})     
+    merge_df = vpython(id ="merge.df", fun_obj = pro_merge, op_kwargs = {"task_name": "merge_df!!!"})     
 
-    de_dup = vpython(id ="de.dup", fun_obj = pro_data, op_kwargs = {"task_name": "de_dup!!!"})     
+    de_dup = vpython(id ="de.dup", fun_obj = pro_data2, op_kwargs = {"task_name": "de_dup!!!"})     
     
     summary_df = vpython(id ="summary.df", fun_obj = pro_data2, op_kwargs = {"task_name": "summary_df!!!"})     
 
