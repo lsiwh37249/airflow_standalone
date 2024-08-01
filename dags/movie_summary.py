@@ -38,38 +38,22 @@ with DAG(
     def get_apply_data():
         print("get_apply_data")
 
-    apply_Atype = PythonVirtualenvOperator(
-        task_id='apply.Atype',
-        python_callable=get_apply_data,
-        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
-        system_site_packages=False,
-        trigger_rule="all_done",
-        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
-    )
-    apply_Btype = PythonVirtualenvOperator(
-        task_id='apply.Btype',
-        python_callable=get_apply_data,
-        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
-        system_site_packages=False,
-        trigger_rule="all_done",
-        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
-    )
-    apply_Ctype = PythonVirtualenvOperator(
-        task_id='apply.Ctype',
-        python_callable=get_apply_data,
-        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
-        system_site_packages=False,
-        trigger_rule="all_done",
-        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
-    )    
-    apply_Dtype = PythonVirtualenvOperator(
-        task_id='apply.Dtype',
-        python_callable=get_apply_data,
-        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
-        system_site_packages=False,
-        trigger_rule="all_done",
-        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
-    )
+    def gen_PyVirEnvOp(*id):
+        task = PythonVirtualenvOperator(
+            task_id=id[0],
+            python_callable=get_apply_data,
+            #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+            system_site_packages=False,
+            trigger_rule="all_done",
+            #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
+            )
+        return task
+
+    apply_Atype = gen_PyVirEnvOp("apply.Atype")
+    apply_Btype = gen_PyVirEnvOp("apply.Btype")
+    apply_Ctype = gen_PyVirEnvOp("apply.Ctype")
+    apply_Dtype = gen_PyVirEnvOp("apply.Dtype")
+
     
     merge_df = EmptyOperator(
         task_id="merge.of",
