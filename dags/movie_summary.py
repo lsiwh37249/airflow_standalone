@@ -35,48 +35,69 @@ with DAG(
     tags=['api', 'movie', 'part2'],
 ) as dag:
 
-    #def get_apply_data(ds_nodash, url_param):
-    def get_apply_data(ds_nodash, **params):
-        print(params['url_param']) 
-        print("get_apply_data")
+    REQUIREMENTS=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"]
 
-    def vpython(id):
+    #def get_apply_data(ds_nodash, url_param):
+    def pro_data(ds_nodash, **params):
+        print(params['url_param'])
+        print(f"{params}")
+        print(f"{params['url_param']}")
+        print("pro data")
+
+#    def gen_empty(id):
+#        task = []
+#        my = EmptyOperator()
+#   def vpython(id, fun_obj, op_kwargs):
+    def vpython(**kw):
         task  = PythonVirtualenvOperator(
-            task_id=id,
-            python_callable=get_apply_data,
-            requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+            task_id=kw['id'],
+            python_callable=kw['fun_obj'],
+            requirements=REQUIREMENTS,
             system_site_packages=False,
             trigger_rule="all_done",
-            op_kwargs={
-                "url_param" : {"multiMovieYn": "y"}
-                }
+            op_kwargs =  kw['op_kwargs']
+            #op_kwargs={
+            #    "url_param" : {"multiMovieYn": "y"}
+            #    }
             )
         return task
-     
+    
+    def pro_data(**params):
+         print("@" * 33)
+         print(params['task_name']) 
+         print("@" * 33)
+    
+    def pro_data2(task_name ,**params):
+         print("@" * 33)
+         print(task_name)
+         print(params)
+         print("@" * 33)         
+
+    def pro_data3(task_name):
+         print("@" * 33)
+         print(task_name)
+         print("@" * 33)
+   
+
 #    apply_Atype, apply.Btype, apply.Ctype, apply.Dtype = 0 
 #    my_tasks = [apply_Atype, apply.Btype, apply.Ctype, apply.Dtype] 
 #    for my_task,task in zip(my_tasks,vpython("apply.Atype","apply.Btype","apply.Ctype","apply.Dtype")):
 #        my_task = task
-    apply_Atype = vpython('apply.Atype')
-    apply_Btype = vpython('apply.Btype')
-    apply_Ctype = vpython('apply.Ctype')
-    apply_Dtype = vpython('apply.Dtype')
+#    apply_Atype = vpython("apply.type", pro_data, {"url_param" : {"multiMovieYn": "y"}})     
+    apply_Atype = vpython(id ="apply.type", fun_obj = pro_data, op_kwargs = {"task_name": "apply_type!!!"})     
+#    apply_Btype = vpython({'task_ID' : 'apply.Btype'})
+#    apply_Ctype = vpython('apply.Ctype')
+#    apply_Dtype = vpython('apply.Dtype')
 
+    merge_df = vpython(id ="merge.df", fun_obj = pro_data, op_kwargs = {"task_name": "merge_df!!!"})     
 
-    merge_df = EmptyOperator(
-        task_id="merge.of",
-        )
-
-    de_dup = EmptyOperator(
-        task_id="de.dup",
-        )
-
-    summary_df = EmptyOperator(
-        task_id="summary.df",
-        )
+    de_dup = vpython(id ="de.dup", fun_obj = pro_data, op_kwargs = {"task_name": "de_dup!!!"})     
+    
+    summary_df = vpython(id ="summary.df", fun_obj = pro_data2, op_kwargs = {"task_name": "summary_df!!!"})     
 
 
     task_end = EmptyOperator(task_id='end', trigger_rule="all_done")
     task_start = EmptyOperator(task_id='start')
 
-    task_start >> [apply_Atype, apply_Btype, apply_Ctype, apply_Dtype] >> merge_df >> de_dup >> summary_df >> task_end
+#    task_start >> [apply_Atype, apply_Btype, apply_Ctype, apply_Dtype] >> merge_df >> de_dup >> summary_df >> task_end
+    task_start >> apply_Atype >> merge_df >> de_dup >> summary_df >> task_end
