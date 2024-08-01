@@ -35,7 +35,9 @@ with DAG(
     tags=['api', 'movie', 'part2'],
 ) as dag:
 
-    REQUIREMENTS=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"]
+    REQUIREMENTS=[
+        "git+https://github.com/lsiwh37249/mov_agg.git@0.5/agg"
+                ]
 
     #def get_apply_data(ds_nodash, url_param):
    # def pro_data(ds_nodash, **params):
@@ -48,25 +50,12 @@ with DAG(
 #        task = []
 #        my = EmptyOperator()
 #   def vpython(id, fun_obj, op_kwargs):
-#    def vpython(**kw):
-#        task  = PythonVirtualenvOperator(
-#            task_id=kw['id'],
-#            python_callable=kw['fun_obj'],
-#            requirements=REQUIREMENTS,
-#            system_site_packages=False,
-#            trigger_rule="all_done",
-#            op_kwargs =  kw['op_kwargs']
-#            #op_kwargs={
-#            #    "url_param" : {"multiMovieYn": "y"}
-#            #    }
-#            )
-#        return task
     def vpython(**kw):
-        task  = PythonOperator(
+        task  = PythonVirtualenvOperator(
             task_id=kw['id'],
             python_callable=kw['fun_obj'],
-            #requirements=REQUIREMENTS,
-            #system_site_packages=False,
+            requirements=REQUIREMENTS,
+            system_site_packages=False,
             trigger_rule="all_done",
             op_kwargs =  kw['op_kwargs']
             #op_kwargs={
@@ -74,16 +63,11 @@ with DAG(
             #    }
             )
         return task
-
-
-    def pro_data(**params):
-         print("@" * 33)
-         print(params['task_name']) 
-         print("@" * 33)
     
     def pro_data2(task_name ,**params):
          print("@" * 33)
          print(task_name)
+         from pprint import pprint as pp
          ##print(params)
          pp(params)
          print("@" * 33)         
@@ -92,6 +76,13 @@ with DAG(
          print("@" * 33)
          print(task_name)
          print("@" * 33)
+
+    def pro_merge(task_name, **params):
+        load_dt = params['ds_nodash']
+        from mov_agg.u import merge
+        df = merge(load_dt)
+        print("*" * 33)
+        print(df)
    
 
 #    apply_Atype, apply.Btype, apply.Ctype, apply.Dtype = 0 
@@ -99,7 +90,7 @@ with DAG(
 #    for my_task,task in zip(my_tasks,vpython("apply.Atype","apply.Btype","apply.Ctype","apply.Dtype")):
 #        my_task = task
 #    apply_Atype = vpython("apply.type", pro_data, {"url_param" : {"multiMovieYn": "y"}})     
-    apply_Atype = vpython(id ="apply.type", fun_obj = pro_data, op_kwargs = {"task_name": "apply_type!!!"})     
+    apply_Atype = vpython(id ="apply.type", fun_obj = pro_data, op_kwargs = {"task_name" : "apply_type!!!"})     
 #    apply_Btype = vpython({'task_ID' : 'apply.Btype'})
 #    apply_Ctype = vpython('apply.Ctype')
 #    apply_Dtype = vpython('apply.Dtype')
@@ -115,4 +106,6 @@ with DAG(
     task_start = EmptyOperator(task_id='start')
 
 #    task_start >> [apply_Atype, apply_Btype, apply_Ctype, apply_Dtype] >> merge_df >> de_dup >> summary_df >> task_end
-    task_start >> apply_Atype >> merge_df >> de_dup >> summary_df >> task_end
+    task_start >> merge_df
+    merge_df >> de_dup >> apply_Atype
+    apply_Atype >>  summary_df >> task_end
