@@ -8,7 +8,7 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.empty import EmptyOperator
 
-from pprint import pprint
+from pprint import pprint as pp
 
 from airflow.operators.python import (
         PythonOperator, PythonVirtualenvOperator, BranchPythonOperator
@@ -38,22 +38,35 @@ with DAG(
     REQUIREMENTS=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"]
 
     #def get_apply_data(ds_nodash, url_param):
-    def pro_data(ds_nodash, **params):
-        print(params['url_param'])
-        print(f"{params}")
-        print(f"{params['url_param']}")
-        print("pro data")
+   # def pro_data(ds_nodash, **params):
+       # print(params['url_param'])
+        #print(f"{params}")
+       # print(f"{params['url_param']}")
+       # print("pro data")
 
 #    def gen_empty(id):
 #        task = []
 #        my = EmptyOperator()
 #   def vpython(id, fun_obj, op_kwargs):
+#    def vpython(**kw):
+#        task  = PythonVirtualenvOperator(
+#            task_id=kw['id'],
+#            python_callable=kw['fun_obj'],
+#            requirements=REQUIREMENTS,
+#            system_site_packages=False,
+#            trigger_rule="all_done",
+#            op_kwargs =  kw['op_kwargs']
+#            #op_kwargs={
+#            #    "url_param" : {"multiMovieYn": "y"}
+#            #    }
+#            )
+#        return task
     def vpython(**kw):
-        task  = PythonVirtualenvOperator(
+        task  = PythonOperator(
             task_id=kw['id'],
             python_callable=kw['fun_obj'],
-            requirements=REQUIREMENTS,
-            system_site_packages=False,
+            #requirements=REQUIREMENTS,
+            #system_site_packages=False,
             trigger_rule="all_done",
             op_kwargs =  kw['op_kwargs']
             #op_kwargs={
@@ -61,7 +74,8 @@ with DAG(
             #    }
             )
         return task
-    
+
+
     def pro_data(**params):
          print("@" * 33)
          print(params['task_name']) 
@@ -70,7 +84,8 @@ with DAG(
     def pro_data2(task_name ,**params):
          print("@" * 33)
          print(task_name)
-         print(params)
+         ##print(params)
+         pp(params)
          print("@" * 33)         
 
     def pro_data3(task_name):
