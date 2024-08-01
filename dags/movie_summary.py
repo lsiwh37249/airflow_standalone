@@ -38,23 +38,29 @@ with DAG(
     def get_apply_data():
         print("get_apply_data")
 
-    def gen_PyVirEnvOp(*id):
-        task = PythonVirtualenvOperator(
-            task_id=id[0],
-            python_callable=get_apply_data,
-            #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
-            system_site_packages=False,
-            trigger_rule="all_done",
-            #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
-            )
+    def gen_empty(*ids):
+        task =[ ]
+        for id in ids:
+            PVEO = PythonVirtualenvOperator(
+                task_id=id,
+                python_callable=get_apply_data,
+                #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+                system_site_packages=False,
+                trigger_rule="all_done",
+                #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
+                )
+        task.append(PVEO)
         return task
-
-    apply_Atype = gen_PyVirEnvOp("apply.Atype")
-    apply_Btype = gen_PyVirEnvOp("apply.Btype")
-    apply_Ctype = gen_PyVirEnvOp("apply.Ctype")
-    apply_Dtype = gen_PyVirEnvOp("apply.Dtype")
-
     
+#    my_tasks = [apply_Atype, apply.Btype, apply.Ctype, apply.Dtype] 
+#    for my_task,task in zip(my_tasks,gen_empty("apply.Atype","apply.Btype","apply.Ctype","apply.Dtype")):
+#        my_task = task
+    apply_Atype = gen_empty('apply.Atype')[0]
+    apply_Btype = gen_empty('apply.Btype')[0]
+    apply_Ctype = gen_empty('apply.Ctype')[0]
+    apply_Dtype = gen_empty('apply.Dtype')[0]
+
+
     merge_df = EmptyOperator(
         task_id="merge.of",
         )
