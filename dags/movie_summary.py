@@ -35,9 +35,41 @@ with DAG(
     tags=['api', 'movie', 'part2'],
 ) as dag:
 
-    apply_type = EmptyOperator(
-        task_id="apply.type",
-        )
+    def get_apply_data():
+        print("get_apply_data")
+
+    apply_Atype = PythonVirtualenvOperator(
+        task_id='apply.Atype',
+        python_callable=get_apply_data,
+        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+        system_site_packages=False,
+        trigger_rule="all_done",
+        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
+    )
+    apply_Btype = PythonVirtualenvOperator(
+        task_id='apply.Btype',
+        python_callable=get_apply_data,
+        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+        system_site_packages=False,
+        trigger_rule="all_done",
+        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
+    )
+    apply_Ctype = PythonVirtualenvOperator(
+        task_id='apply.Ctype',
+        python_callable=get_apply_data,
+        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+        system_site_packages=False,
+        trigger_rule="all_done",
+        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
+    )    
+    apply_Dtype = PythonVirtualenvOperator(
+        task_id='apply.Dtype',
+        python_callable=get_apply_data,
+        #requirements=["git+https://github.com/lsiwh37249/mov.git@0.3.3/api"],
+        system_site_packages=False,
+        trigger_rule="all_done",
+        #venv_cache_path="/home/kim1/tmp2/airflow_venv/get_data"
+    )
     
     merge_df = EmptyOperator(
         task_id="merge.of",
@@ -55,4 +87,4 @@ with DAG(
     task_end = EmptyOperator(task_id='end', trigger_rule="all_done")
     task_start = EmptyOperator(task_id='start')
 
-    task_start >> apply_type >> merge_df >> de_dup >> summary_df >> task_end
+    task_start >> [apply_Atype, apply_Btype, apply_Ctype, apply_Dtype] >> merge_df >> de_dup >> summary_df >> task_end
